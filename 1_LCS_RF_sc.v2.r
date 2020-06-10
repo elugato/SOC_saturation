@@ -372,11 +372,11 @@ grid.arrange(p,p1,p2, nrow =1)
  ################################################################################# MAOM sequestration by2050
  base<-stack("E:/model/daycent/sim/lucas/results/1_km/_JEODPP/SOC_EU_DayC_grv.tif")[[6]]
   CC<-stack("E:/model/daycent/sim/lucas/results/1_km/_JEODPP/SOC_EU_DayC_grv_CC.tif")[[6]]
-   CA<-stack("E:/model/daycent/sim/lucas/results/1_km/_JEODPP/SOC_EU_DayC_grv_CA.tif")[[6]]
+   CA<-stack("E:/model/daycent/sim/lucas/results/1_km/_JEODPP/SOC_EU_DayC_grv_ha_CA.tif")[[6]]
    
    
    dCC<- CC-base ; dCC[dCC==0]<-NA ; dCC<-dCC/1.5
-   dCA<- CA-base ; dCA[dCA==0]<-NA ; dCC<-dCC/1.27
+   dCA<- CA-base ; dCA[dCA==0]<-NA ; dCA<-dCA/1.5
  
    SEQmax <- overlay(dCC, dCA, fun=max)
    
@@ -402,7 +402,9 @@ grid.arrange(p,p1,p2, nrow =1)
  
 ############################################price
 seq_price<- (dmaom_BM*maom_p + dpom_BM*pom_p)*3.67/30	
+# seq_price_<- (dmaom_BM*25 + dpom_BM*25)*3.67/30	
 
+dSQP<- seq_price - seq_price_
 
 ############################################FIGURES
 dem<-raster("E:\\SIT\\caprese\\soil\\dem\\hillshade1x1LAEA.tif") 
@@ -507,11 +509,19 @@ t6 + as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray
 
 
 ####supplementary seq CC
-t7 <- levelplot(dCC/30, at=seq( -0.04, 0.44, 0.02), par.settings = magmaTheme, margin = F, maxpixels=1e7, 
+t7 <- levelplot(dCC/30, at=seq( -0.04, 0.38, 0.02), par.settings = magmaTheme, margin = F, maxpixels=1e7, 
 scales = list(draw = FALSE), 
 colorkey=list(title = "", height=0.8, width=0.9, space="top"), main=list(label=expression("Mg C ha"^-1*"yr"^-1), cex=0.8))
 t7 + as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
 
+
+####supplementary seq price difference
+t8 <- levelplot(dSQP, par.settings = RdBuTheme, margin = F, maxpixels=1e7, 
+scales = list(draw = FALSE), 
+colorkey=list(title = "", height=0.8, width=0.9, space="top"), main=list(label=expression("Euro ha"^-1*"yr"^-1), cex=0.8))
+t8 + as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
+
+quantile(dSQP, probs = c(0.1, 0.5, 0.9), type=7, names = T)
 
 
 
