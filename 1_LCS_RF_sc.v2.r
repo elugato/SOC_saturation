@@ -418,8 +418,7 @@ grid.arrange(p1,p, nrow =1)
 
 ############################################FIGURES
 dem<-raster("E:\\SIT\\caprese\\soil\\dem\\hillshade1x1LAEA.tif") 
-   map<-dmaom_BM   
-   e <- extent(dmaom_BM)
+   e <- extent(sand)
    dem<-crop(dem,e)
    
 mapaSHP <- rgdal::readOGR('E:\\SIT\\caprese\\adm_units\\country_def.shp')
@@ -531,7 +530,7 @@ t6 + as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray
 #colorkey=list(title = "", height=0.8, width=0.9, space="top"), main=list(label=expression("Euro ha"^-1*"yr"^-1), cex=0.8))
 #t8 + as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
 
-quantile(dSQP, probs = c(0.1, 0.5, 0.9), type=7, names = T)
+#quantile(dSQP, probs = c(0.1, 0.5, 0.9), type=7, names = T)
 
 
 
@@ -569,7 +568,7 @@ geom_smooth(method='lm',formula= y ~ x)+
 scale_colour_gradientn(colours = terrain.colors(10))
 
 
-lm1<-ggplot(data=LCS, aes(MAT, OC_sc_g_kg, colour = RAIN)) + geom_point(alpha=0.5, size=1.8) + ylab("MAOM")+ 
+lm2<-ggplot(data=LCS, aes(MAT, OC_sc_g_kg, colour = RAIN)) + geom_point(alpha=0.5, size=1.8) + ylab("MAOM")+ 
 facet_wrap(~LU)+
 geom_smooth(method='lm',formula= y ~ x)+
 scale_colour_gradientn(colours = terrain.colors(10))
@@ -579,19 +578,21 @@ dP<- RAIN1kpr-RAIN1k
 
 
 dC_LU<-data.frame('LU'= c('CR', 'FR', 'GR', 'SRH', 'CR', 'FR', 'GR', 'SRH'), 
-'FRAC'= c('POM', 'POM', 'POM', 'POM', 'MAOM', 'MAOM', 'MAOM', 'MAOM'), 'dC'=rep(0, times = 8), 'area'=rep(0, times = 8))
+'FRAC'= c('POM', 'POM', 'POM', 'POM', 'MAOM', 'MAOM', 'MAOM', 'MAOM'), 'dC'=rep(0, times = 8), 
+'area'=rep(0, times = 8), 'rel_change'=rep(0, times = 8))
+
 
 
 #POM:j=0 and MAOM:j=4
-j=4
+for(j in c(0,4)){
 
 if (j==0){
 ###POM
-md0<-lm(LCS$OC_pom_g_kg~LCS$MAT*LCS$LU)
+md0<-lm(LCS$OC_pom_g_kg~(LCS$MAT*LCS$RAIN)*LCS$LU)
 md1<-lm(LCS$OC_pom_g_kg~(LCS$MAT+LCS$RAIN)*LCS$LU)
 }else{
 ###MAOM
-md0<-lm(LCS$OC_sc_g_kg~LCS$MAT*LCS$LU)
+md0<-lm(LCS$OC_sc_g_kg~(LCS$MAT*LCS$RAIN)*LCS$LU)
 md1<-lm(LCS$OC_sc_g_kg~(LCS$MAT+LCS$RAIN)*LCS$LU)
 }
 
@@ -638,7 +639,29 @@ dC_LU[(1+j),4]<-cellStats(CRdt*0+1, sum, na.mr=T)/tar
 dC_LU[(2+j),4]<-cellStats(FRdt*0+1, sum, na.mr=T)/tar
 dC_LU[(3+j),4]<-cellStats(GRdt*0+1, sum, na.mr=T)/tar
 dC_LU[(4+j),4]<-cellStats(SHdt*0+1, sum, na.mr=T)/tar
+}
 
+dC_LU$rel_change[1]<-round(dC_LU$dC[1]/((fract_r$value[1]+fract_r$value[5]+fract_r$value[7])/10000)*100,1)
+dC_LU$rel_change[2]<-round(dC_LU$dC[2]/((fract_r$value[2]+fract_r$value[3]+fract_r$value[6])/10000)*100,1)
+dC_LU$rel_change[3]<-round(dC_LU$dC[3]/((fract_r$value[4])/10000)*100,1)
+dC_LU$rel_change[4]<-round(dC_LU$dC[4]/((fract_r$value[8])/10000)*100,1)
+
+dC_LU$rel_change[5]<-round(dC_LU$dC[5]/((fract_r$value[9]+fract_r$value[13]+fract_r$value[15])/10000)*100,1)
+dC_LU$rel_change[6]<-round(dC_LU$dC[6]/((fract_r$value[10]+fract_r$value[11]+fract_r$value[14])/10000)*100,1)
+dC_LU$rel_change[7]<-round(dC_LU$dC[7]/((fract_r$value[12])/10000)*100,1)
+dC_LU$rel_change[8]<-round(dC_LU$dC[8]/((fract_r$value[16])/10000)*100,1)
+
+##
+
+p<-ggplot(data=dC_LU, aes(x=reorder(LU,dC), y=dC, fill=FRAC, width=area)) +
+  geom_bar(stat="identity")+
+ ylab("OC Mt") + xlab("") +
+theme(legend.position = c(.20, .90),
+        legend.title = element_blank(), 
+       panel.background = element_rect(fill = "white", colour = "grey50"))+
+geom_hline(yintercept=0, linetype="dashed")+
+geom_text(aes(label=rel_change), position = position_stack(vjust = 0.5), size=4)+
+coord_flip()
 
 
 
@@ -647,17 +670,6 @@ t4 <- levelplot(dMT, at= c(seq(-20, 20, 5)), par.settings = RdBuTheme, margin = 
 scales = list(draw = FALSE), 
 colorkey=list(title = "", height=0.8, width=0.9, space="top"), main=list(label="dMAOM (Mt of C)", cex=0.8))
 t4 + as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
-
-
-
-p<-ggplot(data=dC_LU, aes(x=reorder(LU,dC), y=dC, fill=FRAC, width=V4)) +
-  geom_bar(stat="identity")+
- ylab("OC Mt") + xlab("") +
-theme(legend.position = c(.20, .90),
-        legend.title = element_blank(), 
-       panel.background = element_rect(fill = "white", colour = "grey50"))+
-coord_flip()
-
 
 
 
