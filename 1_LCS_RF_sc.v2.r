@@ -15,7 +15,7 @@ omad<-stack("E:\\SIT\\caprese\\ven\\sripts_L\\exp\\_LINUXSERVER_soil\\VCFR\\SPT_
 NDEP<-raster("E:\\SIT\\fra\\db\\deposition_2006_to_2010\\ndep_grid")
 
 WCLIM<-stack("E:\\SIT\\caprese\\meteo\\worldclim2\\clim_70-00LAEA.tif")
-WCLpr<-stack("E:\\SIT\\caprese\\meteo\\worldclim2\\HADes8.5_2080_LAEA.tif")
+
 
  RNPPin_<-raster("E:\\SIT\\caprese\\NPP\\hanpp_europe\\RNPPin.tif")
   Npp<-raster("E:\\SIT\\caprese\\NPP\\NPP_modis_2000-10prj.tif")		###modis 2000-2009 1 km
@@ -227,8 +227,7 @@ NDEP1k<-resample(NDEP, silt_clay)
 ##layer n5 
 MAT1k<-resample(WCLIM[[1]], silt_clay)  
 RAIN1k<-resample(WCLIM[[2]], silt_clay)  
-MAT1kpr<-resample(WCLpr[[1]], silt_clay)  
-RAIN1kpr<-resample(WCLpr[[2]], silt_clay) 
+ 
 
 ##layer n6 
 EROS1k<-ERO#resample(ERO, silt_clay)  
@@ -340,13 +339,13 @@ fract_r<-aggregate(. ~ LC, fraction[,5:10], sum)
  
 p<-ggplot(data=fract_r, aes(x=reorder(LC,value), y=value/10000, fill=variable, width=area_n)) +
    geom_bar(stat="identity") + 
-   ylab("SOC Mt") + xlab("") +
+   ylab(expression("SOC Mt"^'')) + xlab("") +
   geom_text(aes(label=round(value_N/10000,0)), position = position_stack(vjust = 0.5), size=2.8) +
    coord_flip() +
-  theme(legend.position = c(.85, .20),
+  theme(axis.text.y=element_blank(), legend.position = c(.85, .20),
         legend.title = element_blank(), 
        panel.background = element_rect(fill = "white", colour = "grey50"))+
-annotate("text", x = 1, y = 5000, label = "N Mt")
+annotate("text", x = 1, y = 5000, label = "N Mt") + scale_fill_brewer(palette='Reds')
  
 p1<-ggplot(data=fract_r, aes(x=reorder(LC,mean), y=mean, fill=variable, width=area_n)) +
    geom_bar(stat="identity") +
@@ -355,7 +354,7 @@ geom_text(aes(label=round(CN,0)), position = position_stack(vjust = 0.5), size=2
   coord_flip() +
   theme(legend.position = "none", 
   panel.background = element_rect(fill = "white", colour = "grey50"))+
-annotate("text", x = 1, y = 90, label = "C:N ratio") 
+annotate("text", x = 1, y = 90, label = "C:N ratio") + scale_fill_brewer(palette='Reds')
 
 
 #p2<-ggplot(data=fract_r, aes(x=reorder(LC,price), y=price, fill=variable, width=area_n)) +
@@ -368,8 +367,8 @@ annotate("text", x = 1, y = 90, label = "C:N ratio")
 # annotate("text", x = 1, y = 500, label = expression("keuro ha"^-1))
 
 
-#grid.arrange(p,p1,p2, nrow =1)
-grid.arrange(p1,p, nrow =1)
+grid.newpage()
+grid.draw(cbind(ggplotGrob(p1), ggplotGrob(p), size = "last"))
  
 ################################################################################# MAOM saturation
  # f <- function(x1, x2)  ifelse(x1 %in% c(18,23,24,25,26), x2, NA)
@@ -496,7 +495,7 @@ t5<-levelplot(CLCr, att='CLCnew', margin = F, maxpixels=1e7,
  'chartreuse3','gold4','gold4','gold4','gold4',
  'forestgreen','darkgreen','darkolivegreen','burlywood4','burlywood4',
  'burlywood4','burlywood4'))
-t5 + layer(sp.lines(mapaSHP, lwd=0.1, col='darkgray')) + layer(sp.points(data, lwd=0.1, col='black')) 
+t5 + as.layer(t0, under = TRUE)+ layer(sp.lines(mapaSHP, lwd=0.1, col='darkgray')) + layer(sp.points(data, lwd=0.1, col='black')) 
 
 #writeRaster(CLCr, filename="CLCr.tif", format="GTiff",overwrite=T)
 
@@ -573,11 +572,26 @@ facet_wrap(~LU)+
 geom_smooth(method='lm',formula= y ~ x)+
 scale_colour_gradientn(colours = terrain.colors(10))
 
+
+
+GCM<-c('HADes', 'CNRM', 'IPLS')
+
+for (i in 1:3)  {
+
+
+###GCMprj
+WCLpr<-stack(paste0("E:\\SIT\\caprese\\meteo\\worldclim2\\",GCM[i],"8.5_2080_LAEA.tif"))
+
+MAT1kpr<-resample(WCLpr[[1]], silt_clay)  
+RAIN1kpr<-resample(WCLpr[[2]], silt_clay)
+
 dT<- MAT1kpr-MAT1k
 dP<- RAIN1kpr-RAIN1k
 
+quantile(dP, probs = c(0.1, 0.5, 0.9), type=7, names = T)
 
-dC_LU<-data.frame('LU'= c('CR', 'FR', 'GR', 'SRH', 'CR', 'FR', 'GR', 'SRH'), 
+
+dC_LU<-data.frame('LU'= c('CR', 'FR', 'GR', 'SH', 'CR', 'FR', 'GR', 'SH'), 
 'FRAC'= c('POM', 'POM', 'POM', 'POM', 'MAOM', 'MAOM', 'MAOM', 'MAOM'), 'dC'=rep(0, times = 8), 
 'area'=rep(0, times = 8), 'rel_change'=rep(0, times = 8))
 
@@ -627,6 +641,9 @@ f <- function(x1, x2, x3)  ifelse(x1 %in% c(26,27,28,29), x2*STsh + x3*SPsh, NA)
 
 dMT<-merge(CRdt,FRdt,GRdt,SHdt)
 dMT<-dMT*BDm_c_1k*2				#t/ha of C
+assign(paste0('dMT', j, '_', GCM[i]), dMT)
+
+
 cellStats(dMT, sum, na.mr=T)*100/1000000	
 tar<-cellStats(dMT*0+1, sum, na.mr=T)
 
@@ -639,39 +656,61 @@ dC_LU[(1+j),4]<-cellStats(CRdt*0+1, sum, na.mr=T)/tar
 dC_LU[(2+j),4]<-cellStats(FRdt*0+1, sum, na.mr=T)/tar
 dC_LU[(3+j),4]<-cellStats(GRdt*0+1, sum, na.mr=T)/tar
 dC_LU[(4+j),4]<-cellStats(SHdt*0+1, sum, na.mr=T)/tar
+ 
 }
 
-dC_LU$rel_change[1]<-round(dC_LU$dC[1]/((fract_r$value[1]+fract_r$value[5]+fract_r$value[7])/10000)*100,1)
-dC_LU$rel_change[2]<-round(dC_LU$dC[2]/((fract_r$value[2]+fract_r$value[3]+fract_r$value[6])/10000)*100,1)
-dC_LU$rel_change[3]<-round(dC_LU$dC[3]/((fract_r$value[4])/10000)*100,1)
-dC_LU$rel_change[4]<-round(dC_LU$dC[4]/((fract_r$value[8])/10000)*100,1)
 
-dC_LU$rel_change[5]<-round(dC_LU$dC[5]/((fract_r$value[9]+fract_r$value[13]+fract_r$value[15])/10000)*100,1)
-dC_LU$rel_change[6]<-round(dC_LU$dC[6]/((fract_r$value[10]+fract_r$value[11]+fract_r$value[14])/10000)*100,1)
-dC_LU$rel_change[7]<-round(dC_LU$dC[7]/((fract_r$value[12])/10000)*100,1)
-dC_LU$rel_change[8]<-round(dC_LU$dC[8]/((fract_r$value[16])/10000)*100,1)
+dC_LU$rel_change[1]<-dC_LU$dC[1]/((fract_r$value[1]+fract_r$value[5]+fract_r$value[7])/10000)*100
+dC_LU$rel_change[2]<-dC_LU$dC[2]/((fract_r$value[2]+fract_r$value[3]+fract_r$value[6])/10000)*100
+dC_LU$rel_change[3]<-dC_LU$dC[3]/((fract_r$value[4])/10000)*100
+dC_LU$rel_change[4]<-dC_LU$dC[4]/((fract_r$value[8])/10000)*100
+
+dC_LU$rel_change[5]<-dC_LU$dC[5]/((fract_r$value[9]+fract_r$value[13]+fract_r$value[15])/10000)*100
+dC_LU$rel_change[6]<-dC_LU$dC[6]/((fract_r$value[10]+fract_r$value[11]+fract_r$value[14])/10000)*100
+dC_LU$rel_change[7]<-dC_LU$dC[7]/((fract_r$value[12])/10000)*100
+dC_LU$rel_change[8]<-dC_LU$dC[8]/((fract_r$value[16])/10000)*100
 
 ##
+assign(paste0('dC_LU_', GCM[i]), dC_LU)
 
-p<-ggplot(data=dC_LU, aes(x=reorder(LU,dC), y=dC, fill=FRAC, width=area)) +
-  geom_bar(stat="identity")+
- ylab("OC Mt") + xlab("") +
-theme(legend.position = c(.20, .90),
+}
+
+
+dC_LUavg<- (dC_LU_CNRM[,3:5]+  dC_LU_HADes[,3:5]+ dC_LU_IPLS[,3:5])/3
+dC_LUavg<-cbind(dC_LU_HADes[,1:2], dC_LUavg, 'sd'=apply(cbind(dC_LU_CNRM[3], dC_LU_HADes[3], dC_LU_IPLS[3]),1,sd))
+dC_LUavg<-cbind(dC_LUavg, 'corr'=dC_LUavg$dC)
+dC_LUavg$corr[5:8]<-ifelse((dC_LUavg$dC[1:4]<0 & dC_LUavg$dC[5:8]<0), dC_LUavg$dC[1:4]+dC_LUavg$dC[5:8], dC_LUavg$dC[5:8])
+
+
+p<-ggplot(data=dC_LUavg, aes(x=reorder(LU,-dC), y=dC, fill=FRAC)) +
+  geom_bar(stat="identity", position="stack")+
+ ylab("C Mt") + xlab("") +
+theme(legend.position = c(.15, .10),
         legend.title = element_blank(), 
        panel.background = element_rect(fill = "white", colour = "grey50"))+
-geom_hline(yintercept=0, linetype="dashed")+
-geom_text(aes(label=rel_change), position = position_stack(vjust = 0.5), size=4)+
+geom_hline(yintercept=0, linetype="dashed", colour = "grey50")+
+geom_text(aes(label=round(rel_change,1)), position = position_dodge(0.5), size=3)+
+scale_fill_brewer(palette='Reds', direction=-1)+
+geom_linerange(aes(ymin=corr-sd, ymax=corr+sd), alpha=0.6, size=0.5)+
 coord_flip()
 
 
+dMTpom<-(dMT0_CNRM + dMT0_HADes+ dMT0_IPLS)/3
+dMTmaom<-(dMT4_CNRM + dMT4_HADes+ dMT4_IPLS)/3
 
 #-20, 20, 5
-t4 <- levelplot(dMT, at= c(seq(-20, 20, 5)), par.settings = RdBuTheme, margin = F, maxpixels=1e7, 
+t4 <- levelplot(dMTpom, at= c(seq(-20, 20, 5)), par.settings = RdBuTheme, margin = F, maxpixels=1e7, 
 scales = list(draw = FALSE), 
-colorkey=list(title = "", height=0.8, width=0.9, space="top"), main=list(label="dMAOM (Mt of C)", cex=0.8))
-t4 + as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
+colorkey=list(title = "a)     ",  height=0.8, width=0.9, space="top"), main=list(label="dPOM (C Mt)", cex=0.8)) +
+as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
 
 
 
+t5 <- levelplot(dMTmaom, at= c(seq(-20, 20, 5)), par.settings = RdBuTheme, margin = F, maxpixels=1e5, 
+scales = list(draw = FALSE), 
+colorkey=list(title = "b)     ",  height=0.8, width=0.9, space="top"), main=list(label="dMAOM (C Mt)", cex=0.8))+
+as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
+
+grid.arrange(t4, t5, ncol=2)
 
 
