@@ -104,7 +104,13 @@ LCS<-merge(lucasDB, LCS_frac, by = "sample_ID", sort=FALSE, all = TRUE)
 LCS<-subset(LCS, LCS$OC_sc_g_kg>0)
 LCS<-subset(LCS, LCS$OC>0)
 
-#################################################LCS correction
+
+
+
+
+
+#RANDOM FOREST
+###########################################################################LCS correction
 LCS$EROS[176]<-0.32
 ############################################################################### RF prediction MAOM
 #pairs(OC_sc_g_kg ~ s_c_prc + pH_in_H2O + OC_tf + Ndep_WD_tx + MAT + EROS + LU, data= LCS,cex=0.9, col=alpha("black", 0.5))
@@ -263,19 +269,80 @@ names(inputR)<-c('s_c_prc', 'pH_in_H2O',  'N_tf',  'Ndep_WD_tx',  'MAT', 'EROS',
  maoN_1k<- predict(inputR, RFn, type='response', progress='window', na.rm=T)
  poN_1k<- N_1k - maoN_1k
  
- zonal(maom_1k/maoN_1k, CLC, 'mean', na.rm=T) 	
- zonal(pom_1k/poN_1k, CLC, 'mean', na.rm=T) 	
+ #zonal(maom_1k/maoN_1k, CLC, 'mean', na.rm=T) 	
+ #zonal(pom_1k/poN_1k, CLC, 'mean', na.rm=T) 	
 
                                    
 
+
+
+
+###################################################################################
+#MAPS and PLOTS
 ###################################################################################scatter plot MAOM vs SOC
 library(reshape2)
  library(gridExtra)
   library(rasterVis)
    library(quantreg)
     library(sf)
-#    library(maptools)
+     library(grid)
  
+
+#########################################
+#FIG 1
+#########################################
+dem<-raster("E:\\SIT\\caprese\\soil\\dem\\hillshade1x1LAEA.tif") 
+   e <- extent(sand)
+   dem<-crop(dem,e)
+   
+mapaSHP <- rgdal::readOGR('E:\\SIT\\caprese\\adm_units\\country_def.shp')
+
+t0<-levelplot(dem*0, par.settings = GrTheme, maxpixels=1e7)
+
+
+
+soc_lab=expression("g C kg"^-1*"soil")
+
+FIG1.1 <- levelplot(maom_1k, par.settings = viridisTheme, margin = F, maxpixels=1e7, 
+scales = list(draw = FALSE), 
+colorkey=list(title = "", height=0.8, width=0.9, space="top"), main=list(label=soc_lab, cex=0.8)) +
+as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
+
+
+FIG1.2 <- levelplot(m_t_SOCr, at= c(seq(0, 1, 0.1)), par.settings = RdBuTheme, margin = F, maxpixels=1e7, 
+scales = list(draw = FALSE), 
+colorkey=list(title = "", height=0.8, width=0.9, space="top"), main=list(label="MAOM:SOC", cex=0.8)) +
+as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
+
+
+grid.arrange(FIG1.1, FIG1.2, ncol=2)
+
+
+
+
+####supplementary SOC
+SOC20c_1k<-SOC20c_1k*(pom_1k*0+1)
+
+S1.1 <- levelplot(SOC20c_1k, par.settings = magmaTheme, margin = F, maxpixels=1e7, 
+scales = list(draw = FALSE), 
+colorkey=list(title = "", height=0.8, width=0.9, space="top"), main=list(label=soc_lab, cex=0.8)) +
+as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
+
+####supplementary POM
+S1.2 <- levelplot(pom_1k, par.settings = viridisTheme, margin = F, maxpixels=1e7, 
+scales = list(draw = FALSE), 
+colorkey=list(title = "", height=0.8, width=0.9, space="top"), main=list(label=soc_lab, cex=0.8)) +
+as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
+
+
+grid.arrange(S1.1, S1.2, ncol=2)
+
+
+#########################################
+#FIG SAT
+#########################################
+
+
 SOCf<-cbind(as.vector(SOC20c_1k), as.vector(maom_1k))
 SOCf<-as.data.frame(SOCf)
 
@@ -294,6 +361,11 @@ FIG_sat<-ggplot(data=SOCf, aes(V1,V2)) +
 grid.arrange(F2,FIG_sat,nrow =1)
 
 
+
+#########################################
+#FIG 2
+#########################################
+
 MAOM_LU<-zonal(maom_1k*BDm_c_1k*cm_prof*0.1 , CLC, 'sum', na.rm=T)    ###SOC
  POM_LU<-zonal(pom_1k*BDm_c_1k*cm_prof*0.1 , CLC, 'sum', na.rm=T) 
  
@@ -310,16 +382,7 @@ MAON_LU<-zonal(maoN_1k*BDm_c_1k*cm_prof*0.1 , CLC, 'sum', na.rm=T)    ###N
                 'heterog. agr.','heterog. agr.','heterog. agr.','heterog. agr.', 'broad l.', 'conif.', 'mixed f.',
                 'shrub-herb.', 'shrub-herb.', 'shrub-herb.', 'shrub-herb.')) 
 
-#################monetary value########################
-#cur_p<-25  	##price in Euro per t of CO2
-#p_mrt<-4	##ratio mrt
 
-#tot_e<-cur_p*3.67*(sum(fraction$MAOM)+sum(fraction$POM))/10000000         ###billion euro
-
-#pom_p<-tot_e/((sum(fraction$MAOM)*p_mrt+ sum(fraction$POM))*3.67/10000000)	 ###euro per t of CO2 
-#maom_p<-pom_p*p_mrt
-
-######################################################
 
 fract_r<-aggregate(. ~ LC, fraction[,5:10], sum)
 
@@ -334,10 +397,9 @@ fract_r<-aggregate(. ~ LC, fraction[,5:10], sum)
    #fract_r$priceHa<-ifelse(fract_r$variable=="POM",fract_r$mean*3.67*pom_p,fract_r$mean*3.67*maom_p)
      
 
-
    
  
-p<-ggplot(data=fract_r, aes(x=reorder(LC,value), y=value/10000, fill=variable, width=area_n)) +
+FIG2.1<-ggplot(data=fract_r, aes(x=reorder(LC,value), y=value/10000, fill=variable, width=area_n)) +
    geom_bar(stat="identity") + 
    ylab(expression("SOC Mt"^'')) + xlab("") +
   geom_text(aes(label=round(value_N/10000,0)), position = position_stack(vjust = 0.5), size=2.8) +
@@ -347,7 +409,7 @@ p<-ggplot(data=fract_r, aes(x=reorder(LC,value), y=value/10000, fill=variable, w
        panel.background = element_rect(fill = "white", colour = "grey50"))+
 annotate("text", x = 1, y = 5000, label = "N Mt") + scale_fill_brewer(palette='Reds')
  
-p1<-ggplot(data=fract_r, aes(x=reorder(LC,mean), y=mean, fill=variable, width=area_n)) +
+FIG2.2<-ggplot(data=fract_r, aes(x=reorder(LC,mean), y=mean, fill=variable, width=area_n)) +
    geom_bar(stat="identity") +
   ylab(expression("SOC Mg ha"^-1)) + xlab("") +
 geom_text(aes(label=round(CN,0)), position = position_stack(vjust = 0.5), size=2.8) +
@@ -357,18 +419,9 @@ geom_text(aes(label=round(CN,0)), position = position_stack(vjust = 0.5), size=2
 annotate("text", x = 1, y = 90, label = "C:N ratio") + scale_fill_brewer(palette='Reds')
 
 
-#p2<-ggplot(data=fract_r, aes(x=reorder(LC,price), y=price, fill=variable, width=area_n)) +
-#   geom_bar(stat="identity") +
-#  ylab("Billion Euro") + xlab("") +
-#geom_text(aes(label=round(priceHa/1000,1)), position = position_stack(vjust = 0.5), size=2.8) +
-#  coord_flip() +
-#  theme(legend.position = "none", 
-#  panel.background = element_rect(fill = "white", colour = "grey50"))+
-# annotate("text", x = 1, y = 500, label = expression("keuro ha"^-1))
-
 
 grid.newpage()
-grid.draw(cbind(ggplotGrob(p1), ggplotGrob(p), size = "last"))
+grid.draw(cbind(ggplotGrob(FIG2.2), ggplotGrob(FIG2.1), size = "last"))
  
 ################################################################################# MAOM saturation
  # f <- function(x1, x2)  ifelse(x1 %in% c(18,23,24,25,26), x2, NA)
@@ -377,89 +430,9 @@ grid.draw(cbind(ggplotGrob(p1), ggplotGrob(p), size = "last"))
  # MAOM_sat2<- focal(MAOM_sat, w=matrix(1,nrow=5,ncol=5), fun=max, na.rm=T) 
  # 
  # writeRaster(MAOM_sat2-maom_1k, filename="MAOM_def.tif", format="GTiff",overwrite=T)
- 
- ################################################################################# MAOM sequestration by2050
-#  base<-stack("E:/model/daycent/sim/lucas/results/1_km/_JEODPP/SOC_EU_DayC_grv.tif")[[6]]
-#   CC<-stack("E:/model/daycent/sim/lucas/results/1_km/_JEODPP/SOC_EU_DayC_grv_CC.tif")[[6]]
-#    CA<-stack("E:/model/daycent/sim/lucas/results/1_km/_JEODPP/SOC_EU_DayC_grv_ha_CA.tif")[[6]]
-#    
-#    
-#    dCC<- CC-base ; dCC[dCC==0]<-NA ; dCC<-dCC/1.5
-#    dCA<- CA-base ; dCA[dCA==0]<-NA ; dCA<-dCA/1.5
-#  
-#    SEQmax <- overlay(dCC, dCA, fun=max)
-#    
-#    SOC20c_BM<-((SOC20st_1k+SEQmax)/(BDm_c_1k*2000))*1000             ###Cseq + stock to content g/kg
-#    
-#    inputR<-silt_clay															
-#    inputR<-addLayer(inputR, pH_H2O, SOC20c_BM, NDEP1k, MAT1k, EROS1k, K)			
-#    names(inputR)<-c('s_c_prc', 'pH_in_H2O',  'OC_tf',  'Ndep_WD_tx',  'MAT', 'EROS', 'K')   
-#    
-#    
-#    
-#    maom_BM<- predict(inputR, RF, type='response', progress='window', na.rm=T)  
-#    pom_BM<- SOC20c_BM - maom_BM
-#    
-#    dmaom_BM<- (maom_BM - maom_1k) * BDm_c_1k*cm_prof*0.1
-#    dpom_BM<-  (pom_BM - pom_1k) * BDm_c_1k*cm_prof*0.1
-#    
-#    cellStats(dmaom_BM, sum, na.rm=T); cellStats(dpom_BM, sum, na.rm=T)
-#    
-# #   writeRaster(dmaom_BM*BDm_c_1k*cm_prof*0.1, filename="dmaom_BM_t_ha.tif", format="GTiff",overwrite=T)   ###stock BM
-# #   writeRaster(dpom_BM*BDm_c_1k*cm_prof*0.1, filename="dpom_BM_t_ha.tif", format="GTiff",overwrite=T)   ###stock BM
-#    
-#  
-# ############################################price
-# seq_price<- (dmaom_BM*maom_p + dpom_BM*pom_p)*3.67/30	
-# # seq_price_<- (dmaom_BM*25 + dpom_BM*25)*3.67/30	
-# 
-# dSQP<- seq_price - seq_price_
-
-############################################FIGURES
-dem<-raster("E:\\SIT\\caprese\\soil\\dem\\hillshade1x1LAEA.tif") 
-   e <- extent(sand)
-   dem<-crop(dem,e)
-   
-mapaSHP <- rgdal::readOGR('E:\\SIT\\caprese\\adm_units\\country_def.shp')
-
-t0<-levelplot(dem*0, par.settings = GrTheme, maxpixels=1e7)
-
-####fig1
-
-soc_lab=expression("g C kg"^-1*"soil")
-
-t1 <- levelplot(maom_1k, par.settings = viridisTheme, margin = F, maxpixels=1e7, 
-scales = list(draw = FALSE), 
-colorkey=list(title = "", height=0.8, width=0.9, space="top"), main=list(label=soc_lab, cex=0.8))
-t1 + as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
+################################################################################# 
 
 
-t2 <- levelplot(m_t_SOCr, at= c(seq(0, 1, 0.1)), par.settings = RdBuTheme, margin = F, maxpixels=1e7, 
-scales = list(draw = FALSE), 
-colorkey=list(title = "", height=0.8, width=0.9, space="top"), main=list(label="MAOM:SOC", cex=0.8))
-t2 + as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
-
-
-
-
-####fig3
-# fig3<-stack(seq_price, SEQmax/30)
-# 
-# t3 <- levelplot(fig3, layers=1, par.settings = magmaTheme, margin = F, maxpixels=1e7, 
-# scales = list(draw = FALSE), 
-# colorkey=list(title = "", height=0.8, width=0.9, space="top"), main=list(label=expression("Euro ha"^-1*"yr"^-1), cex=0.8))
-# t3 + as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
-# 
-# 
-# 
-# t4 <- levelplot(fig3, layers=2,  par.settings = viridisTheme, margin = F, maxpixels=1e7, 
-# scales = list(draw = FALSE), 
-# colorkey=list(title = "", height=0.8, width=0.9, space="top"), main=list(label=expression("Mg C ha"^-1*"yr"^-1), cex=0.8))
-# t4 + as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
-
-
-
-###################point distribution
 #####################################################################################################
 ##Projection LAEA
 #####################################################################################################
@@ -487,76 +460,32 @@ rat$CLCnew[7]<-"Annual crop ass. permanent crops/heterog. agr."
 rat$CLCnew[9]<-"Agricultural and natural vegetation/heterog. agr." 
 levels(CLCr) <- rat
 
+#########################################
+#FIG EXTENDED 1
+#########################################
 
-
-t5<-levelplot(CLCr, att='CLCnew', margin = F, maxpixels=1e7,
+FIG_EXT1<-levelplot(CLCr, att='CLCnew', margin = F, maxpixels=1e7,
  scales = list(draw = FALSE), 
  col.regions=c('darkgoldenrod1','darkgoldenrod1','chocolate3','chocolate3','chocolate3',
  'chartreuse3','gold4','gold4','gold4','gold4',
  'forestgreen','darkgreen','darkolivegreen','burlywood4','burlywood4',
- 'burlywood4','burlywood4'))
-t5 + as.layer(t0, under = TRUE)+ layer(sp.lines(mapaSHP, lwd=0.1, col='darkgray')) + layer(sp.points(data, lwd=0.1, col='black')) 
+ 'burlywood4','burlywood4')) +
+as.layer(t0, under = TRUE)+ layer(sp.lines(mapaSHP, lwd=0.1, col='darkgray')) + layer(sp.points(data, lwd=0.1, col='black')) 
 
 #writeRaster(CLCr, filename="CLCr.tif", format="GTiff",overwrite=T)
 
 
-####supplementary SOC
-t8 <- levelplot(SOC20c_1k, par.settings = magmaTheme, margin = F, maxpixels=1e7, 
-scales = list(draw = FALSE), 
-colorkey=list(title = "", height=0.8, width=0.9, space="top"), main=list(label=soc_lab, cex=0.8))
-t8 + as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
 
 
-
-####supplementary POM
-t6 <- levelplot(pom_1k, par.settings = viridisTheme, margin = F, maxpixels=1e7, 
-scales = list(draw = FALSE), 
-colorkey=list(title = "", height=0.8, width=0.9, space="top"), main=list(label=soc_lab, cex=0.8))
-t6 + as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
-
-
-
-####supplementary seq CC
-#t7 <- levelplot(dCC/30, at=seq( -0.04, 0.38, 0.02), par.settings = magmaTheme, margin = F, maxpixels=1e7, 
-#scales = list(draw = FALSE), 
-#colorkey=list(title = "", height=0.8, width=0.9, space="top"), main=list(label=expression("Mg C ha"^-1*"yr"^-1), cex=0.8))
-#t7 + as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
-
-
-####supplementary seq price difference
-#t8 <- levelplot(dSQP, par.settings = RdBuTheme, margin = F, maxpixels=1e7, 
-#scales = list(draw = FALSE), 
-#colorkey=list(title = "", height=0.8, width=0.9, space="top"), main=list(label=expression("Euro ha"^-1*"yr"^-1), cex=0.8))
-#t8 + as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
-
-#quantile(dSQP, probs = c(0.1, 0.5, 0.9), type=7, names = T)
-
-
-
-
-####supplementary LCS texture distribution 
-
-LCSall<-rbind(LCS, LCSpred)
-
-##ver.3.5
-tex <- data.frame(
-"CLAY" = LCSall$clay,
-"SILT" = 100-LCSall$clay-LCSall$sand,
-"SAND"=LCSall$sand
-)
-
-
-library(ggtern)
-ggtern(data=tex,aes(SILT,CLAY, SAND)) + geom_point(alpha=0.2)+
-geom_point(data = tex[1:352,], col = 'red', size=1.5)
-
-
- hist(LCSall$OC,  main='', xlab="SOC (g/ka)", freq=FALSE, lty=1)
- hist(LCS$OC_tf,  add=T, col=alpha("red", 0.2), freq=FALSE,  lty=0 )
 
 
 ############################################################################### 
+#dSOC PROJECTIONS
 ############################################################################### 
+#########################################
+#FIG EXTENDED 1
+#########################################
+
 LCS<-subset(LCS, LU %in% c("SHR", "GR", "FR", "CR"))
 LCS$LU<- droplevels(LCS$LU)
 
@@ -588,7 +517,8 @@ RAIN1kpr<-resample(WCLpr[[2]], silt_clay)
 dT<- MAT1kpr-MAT1k
 dP<- RAIN1kpr-RAIN1k
 
-quantile(dP, probs = c(0.1, 0.5, 0.9), type=7, names = T)
+assign(paste0('dT', '_', GCM[i]), dT)
+assign(paste0('dP', '_', GCM[i]), dP)
 
 
 dC_LU<-data.frame('LU'= c('CR', 'FR', 'GR', 'SH', 'CR', 'FR', 'GR', 'SH'), 
@@ -682,9 +612,9 @@ dC_LUavg<-cbind(dC_LUavg, 'corr'=dC_LUavg$dC)
 dC_LUavg$corr[5:8]<-ifelse((dC_LUavg$dC[1:4]<0 & dC_LUavg$dC[5:8]<0), dC_LUavg$dC[1:4]+dC_LUavg$dC[5:8], dC_LUavg$dC[5:8])
 
 
-p<-ggplot(data=dC_LUavg, aes(x=reorder(LU,-dC), y=dC, fill=FRAC)) +
+FIG3.2<-ggplot(data=dC_LUavg, aes(x=reorder(LU,-dC), y=dC, fill=FRAC)) +
   geom_bar(stat="identity", position="stack")+
- ylab("C Mt") + xlab("") +
+ ylab("Mt of C") + xlab("") + ggtitle("\n \n Cumulative changes ")+
 theme(legend.position = c(.15, .10),
         legend.title = element_blank(), 
        panel.background = element_rect(fill = "white", colour = "grey50"))+
@@ -699,18 +629,70 @@ dMTpom<-(dMT0_CNRM + dMT0_HADes+ dMT0_IPLS)/3
 dMTmaom<-(dMT4_CNRM + dMT4_HADes+ dMT4_IPLS)/3
 
 #-20, 20, 5
-t4 <- levelplot(dMTpom, at= c(seq(-20, 20, 5)), par.settings = RdBuTheme, margin = F, maxpixels=1e7, 
+FIG3.1 <- levelplot(dMTpom, at= c(seq(-20, 20, 5)), par.settings = RdBuTheme, margin = F, maxpixels=1e7, 
 scales = list(draw = FALSE), 
-colorkey=list(title = "a)     ",  height=0.8, width=0.9, space="top"), main=list(label="dPOM (C Mt)", cex=0.8)) +
+colorkey=list(title = "",  height=0.8, width=0.9, space="top"), main=list(label=expression("dPOM (Mg C ha"^-1*")"), cex=0.8)) +
 as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
 
 
 
-t5 <- levelplot(dMTmaom, at= c(seq(-20, 20, 5)), par.settings = RdBuTheme, margin = F, maxpixels=1e5, 
+FIG3.3 <- levelplot(dMTmaom, at= c(seq(-20, 20, 5)), par.settings = RdBuTheme, margin = F, maxpixels=1e7, 
 scales = list(draw = FALSE), 
-colorkey=list(title = "b)     ",  height=0.8, width=0.9, space="top"), main=list(label="dMAOM (C Mt)", cex=0.8))+
+colorkey=list(title = "",  height=0.8, width=0.9, space="top"), main=list(label=expression("dMAOM (Mg C ha"^-1*")"), cex=0.8))+
 as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
 
-grid.arrange(t4, t5, ncol=2)
+grid.arrange(FIG3.1, FIG3.2, FIG3.3, ncol=3)
+
+
+
+############################################################################### 
+
+#########################################
+#FIG EXTENDED 1
+#########################################
+dTavg<- dT-(dT_CNRM + dT_HADes+ dT_IPLS)/3
+dPavg<- dP-(dP_CNRM + dP_HADes+ dP_IPLS)/3
+
+q<-quantile(dTavg, probs = c(0, 0.1, 0.25, 0.5, 0.75, 0.9, 1), type=7, names = T)
+
+figS_dT<- levelplot(dTavg, at= q, par.settings = viridisTheme, margin = F, maxpixels=1e7, 
+scales = list(draw = FALSE), 
+colorkey=list(title = "", height=0.8, width=0.9, space="top"), main=list(label="dT (°C)", cex=0.8))+
+as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
+
+
+
+figS_dP<- levelplot(dPavg, at= c(seq(-250, 250, 25)), par.settings = RdBuTheme, margin = F, maxpixels=1e7, 
+scales = list(draw = FALSE), 
+colorkey=list(title = "", height=0.8, width=0.9, space="top"), main=list(label="dP (mm)", cex=0.8)) + 
+as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
+
+
+grid.arrange(figS_dT, figS_dP, ncol=2)
+
+
+
+
+####
+####supplementary LCS texture distribution 
+####
+
+LCSall<-rbind(LCS, LCSpred)
+
+##ver.3.5
+tex <- data.frame(
+"CLAY" = LCSall$clay,
+"SILT" = 100-LCSall$clay-LCSall$sand,
+"SAND"=LCSall$sand
+)
+
+
+library(ggtern)
+ggtern(data=tex,aes(SILT,CLAY, SAND)) + geom_point(alpha=0.2)+
+geom_point(data = tex[1:352,], col = 'red', size=1.5)
+
+
+ hist(LCSall$OC,  main='', xlab="SOC (g/ka)", freq=FALSE, lty=1)
+ hist(LCS$OC_tf,  add=T, col=alpha("red", 0.2), freq=FALSE,  lty=0 )
 
 
