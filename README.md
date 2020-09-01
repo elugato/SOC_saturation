@@ -3,7 +3,7 @@
 R script 
 * **Random Forest (RF) model on LUCAS data fractions** 
 
-`LCS_frac<-read.csv("E:\\SIT\\fra\\db\\fractions\\forR_allLC_CaCO3.csv", header = TRUE)`
+`RF<-randomForest(OC_sc_g_kg ~ s_c_prc + pH_in_H2O + OC_tf + Ndep_WD_tx + MAT + EROS + WT, data = LCS, ntree=1000, mtry=4, importance=TRUE, na.action=na.omit)`
 
 
 
