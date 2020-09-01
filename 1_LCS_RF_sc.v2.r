@@ -303,6 +303,9 @@ t0<-levelplot(dem*0, par.settings = GrTheme, maxpixels=1e7)
 
 soc_lab=expression("g C kg"^-1*"soil")
 
+#par.settings = rasterTheme(viridis_pal(direction = -1, option = "D")(255))
+
+
 FIG1.1 <- levelplot(maom_1k, par.settings = viridisTheme, margin = F, maxpixels=1e7, 
 scales = list(draw = FALSE), 
 colorkey=list(title = "", height=0.8, width=0.9, space="top"), main=list(label=soc_lab, cex=0.8)) +
@@ -315,9 +318,7 @@ colorkey=list(title = "", height=0.8, width=0.9, space="top"), main=list(label="
 as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
 
 
-grid.arrange(FIG1.1, FIG1.2, ncol=2)
-
-
+#grid.arrange(FIG1.1, FIG1.2, ncol=2)
 
 
 ####supplementary SOC
@@ -337,6 +338,7 @@ as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
 
 grid.arrange(S1.1, S1.2, ncol=2)
 
+grid.arrange(FIG1.1, S1.2, FIG1.2, ncol=3)
 
 #########################################
 #FIG SAT
@@ -401,13 +403,13 @@ fract_r<-aggregate(. ~ LC, fraction[,5:10], sum)
  
 FIG2.1<-ggplot(data=fract_r, aes(x=reorder(LC,value), y=value/10000, fill=variable, width=area_n)) +
    geom_bar(stat="identity") + 
-   ylab(expression("SOC Mt"^'')) + xlab("") +
+   ylab(expression("SOC Tg"^'')) + xlab("") +
   geom_text(aes(label=round(value_N/10000,0)), position = position_stack(vjust = 0.5), size=2.8) +
    coord_flip() +
   theme(axis.text.y=element_blank(), legend.position = c(.85, .20),
         legend.title = element_blank(), 
        panel.background = element_rect(fill = "white", colour = "grey50"))+
-annotate("text", x = 1, y = 5000, label = "N Mt") + scale_fill_brewer(palette='Reds')
+annotate("text", x = 1, y = 5000, label = "N Tg") + scale_fill_brewer(palette='Dark2')
  
 FIG2.2<-ggplot(data=fract_r, aes(x=reorder(LC,mean), y=mean, fill=variable, width=area_n)) +
    geom_bar(stat="identity") +
@@ -416,7 +418,7 @@ geom_text(aes(label=round(CN,0)), position = position_stack(vjust = 0.5), size=2
   coord_flip() +
   theme(legend.position = "none", 
   panel.background = element_rect(fill = "white", colour = "grey50"))+
-annotate("text", x = 1, y = 90, label = "C:N ratio") + scale_fill_brewer(palette='Reds')
+annotate("text", x = 1, y = 90, label = "C:N ratio") + scale_fill_brewer(palette='Dark2')
 
 
 
@@ -614,13 +616,13 @@ dC_LUavg$corr[5:8]<-ifelse((dC_LUavg$dC[1:4]<0 & dC_LUavg$dC[5:8]<0), dC_LUavg$d
 
 FIG3.2<-ggplot(data=dC_LUavg, aes(x=reorder(LU,-dC), y=dC, fill=FRAC)) +
   geom_bar(stat="identity", position="stack")+
- ylab("Mt of C") + xlab("") + ggtitle("\n \n Cumulative changes ")+
+ ylab("Tg of C") + xlab("") + ggtitle("\n \n Cumulative changes ")+
 theme(legend.position = c(.15, .10),
         legend.title = element_blank(), 
        panel.background = element_rect(fill = "white", colour = "grey50"))+
 geom_hline(yintercept=0, linetype="dashed", colour = "grey50")+
 geom_text(aes(label=round(rel_change,1)), position = position_dodge(0.5), size=3)+
-scale_fill_brewer(palette='Reds', direction=-1)+
+scale_fill_brewer(palette='Dark2', direction=-1)+
 geom_linerange(aes(ymin=corr-sd, ymax=corr+sd), alpha=0.6, size=0.5)+
 coord_flip()
 
