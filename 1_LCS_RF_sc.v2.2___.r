@@ -259,4 +259,22 @@ geom_smooth(method = lm, formula = y ~x)+
 scale_colour_gradientn(colours = terrain.colors(10))
 
 
+############################################################################### 
+#dSOC PROJECTIONS mrt!!!!!!!!!!!!!!!!!!!!!!!!
+###############################################################################
+
+MRT<-LCS$SOC_lcs/(LCS$NPP)
+
+FIGmrt<-ggplot(data=LCS, aes(MAT, MRT)) + geom_point(alpha=0.5, size=1.8) + 
+ylab("MRT")+ ylim(0, 40)+
+facet_wrap(~LU)+
+geom_smooth(method = lm, formula = y ~x)+
+scale_colour_gradientn(colours = terrain.colors(10)) +
+scale_y_continuous(sec.axis = sec_axis(~ . /40))+
+geom_point(aes(MAT, (OC_sc_g_kg /OC_tf)*40), col='red', alpha=0.5)+
+geom_smooth(aes(MAT, (OC_sc_g_kg /OC_tf)*40), method=lm,colour="red")
+
+
+
+
 
