@@ -47,10 +47,18 @@ BD_1kI<-raster('E:/SIT/caprese/soil/SOC_ISRIC/LEONIDAS/SoilGrids/bdod_0-20.tif')
 GRV_1kI<-raster('E:/SIT/caprese/soil/SOC_ISRIC/LEONIDAS/SoilGrids/cfvo_0-20.tif')/10
 
  SOC20c_1kI[SOC20c_1kI==0]<-NA
+
+## limitation to mineral soil JRC########
+  f <- function(x1, x2)  ifelse(x1 > 120, NA, x2)
+  SOC20c_1k <- overlay(SOC20c_1kI, SOC20c_1k, fun=f, forcefun=TRUE)
+##
+
  SOC20c_1kI[SOC20c_1kI>OC_ul]<-NA
  SOC20c_1kI<-SOC20c_1kI*LUmask
 
 SOC20st_1kI<-SOC20c_1kI*BD_1kI*(1-GRV_1kI/100)*2
+
+
 
 ## BD stack for maom pom stock conversions ##
 BD_1kE<-stack(BDm_c_1k, BD_1kI*(1-GRV_1kI/100), BDm_c_1k, BD_1kI*(1-GRV_1kI/100))
@@ -274,9 +282,9 @@ grid.arrange(S1.2, FIG1.1,  FIG1.2, ncol=3)
 
 
 ####supplementary SOC
-SOC20c_1k<-SOC20c_1k*(pom_1k*0+1)
+SOC20c_1kE_m<-maom_1kE_m+pom_1kE_m
 
-S1.1 <- levelplot(SOC20c_1k, par.settings = magmaTheme, margin = F, maxpixels=1e7, 
+S1.1 <- levelplot(SOC20c_1kE_m, par.settings = magmaTheme, margin = F, maxpixels=1e7, 
 scales = list(draw = FALSE), 
 colorkey=list(title = "", height=0.8, width=0.9, space="top"), main=list(label=soc_lab, cex=0.8)) +
 as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
@@ -290,7 +298,7 @@ grid.arrange(S1.1, S1.2, ncol=2)
 #########################################
 
 
-SOCf<-cbind(as.vector(SOC20c_1k), as.vector(maom_1k))
+SOCf<-cbind(as.vector(SOC20c_1kE_m), as.vector(maom_1kE_m))
 SOCf<-as.data.frame(SOCf)
 
 
