@@ -406,3 +406,22 @@ as.layer(t0, under = TRUE)+ layer(sp.lines(mapaSHP, lwd=0.1, col='darkgray')) + 
 #writeRaster(CLCr, filename="CLCr.tif", format="GTiff",overwrite=T)
 
 
+#########################################
+#FIG sd MAOM and POM
+#########################################
+
+sd_maom<-calc(maom_1kE, sd, na.rm=T)
+sd_pom<-calc(pom_1kE, sd, na.rm=T)
+
+FIGsdPOM <- levelplot(sd_pom, par.settings = viridisTheme, margin = F, maxpixels=1e7, 
+scales = list(draw = FALSE), 
+colorkey=list(title = "", height=0.8, width=0.9, space="top"), main=list(label=soc_lab, cex=0.8)) +
+as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
+
+FIGsdMAOM <- levelplot(sd_maom, par.settings = viridisTheme, margin = F, maxpixels=1e7, 
+scales = list(draw = FALSE), 
+colorkey=list(title = "", height=0.8, width=0.9, space="top"), main=list(label=soc_lab, cex=0.8)) +
+as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
+
+grid.arrange(FIGsdPOM , FIGsdMAOM, ncol=2)
+
