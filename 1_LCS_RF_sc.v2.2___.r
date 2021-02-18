@@ -162,7 +162,7 @@ theme(legend.position = c(.25, .10),
         legend.title = element_blank(), 
        panel.background = element_rect(fill = "white", colour = "grey50"))+
 geom_hline(yintercept=0, linetype="dashed", colour = "grey50")+
-geom_text(aes(y=-1700, label=round(rel_change,1)), size=3, position = position_dodge(0.3) )+
+#geom_text(aes(y=-1700, label=round(rel_change,1)), size=3, position = position_dodge(0.3) )+
 scale_fill_brewer(palette='Dark2', direction=-1)+
 geom_linerange(aes(ymin=corr-sd, ymax=corr+sd), alpha=0.6, size=0.5)+
 coord_flip()
@@ -174,14 +174,14 @@ dMTmaom<-(dMT4_CNRM + dMT4_HADes+ dMT4_IPLS)/3
 #-20, 20, 5
 FIG3.1 <- levelplot(dMTpom, at= c(seq(-25, 25, 5)), par.settings = RdBuTheme, margin = F, maxpixels=1e7, 
 scales = list(draw = FALSE), 
-colorkey=list(title = "",  height=0.8, width=0.9, space="top"), main=list(label=expression("dPOM (Mg C ha"^-1*")"), cex=0.8)) +
+colorkey=list(title = "",  height=0.8, width=0.9, space="top"), main=list(label=expression(Delta~"POM (Mg C ha"^-1*")"), cex=0.8)) +
 as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
 
 
 
 FIG3.3 <- levelplot(dMTmaom, at= c(seq(-25, 25, 5)), par.settings = RdBuTheme, margin = F, maxpixels=1e7, 
 scales = list(draw = FALSE), 
-colorkey=list(title = "",  height=0.8, width=0.9, space="top"), main=list(label=expression("dMAOM (Mg C ha"^-1*")"), cex=0.8))+
+colorkey=list(title = "",  height=0.8, width=0.9, space="top"), main=list(label=expression(Delta~"MAOM (Mg C ha"^-1*")"), cex=0.8))+
 as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
 
 grid.arrange(FIG3.1, FIG3.2, FIG3.3, ncol=3)
@@ -200,14 +200,14 @@ q<-quantile(dTavg, probs = c(0, 0.1, 0.25, 0.5, 0.75, 0.9, 1), type=7, names = T
 
 figS_dT<- levelplot(dTavg, at= q, par.settings = viridisTheme, margin = F, maxpixels=1e7, 
 scales = list(draw = FALSE), 
-colorkey=list(title = "", height=0.8, width=0.9, space="top"), main=list(label="dT (°C)", cex=0.8))+
+colorkey=list(title = "", height=0.8, width=0.9, space="top"), main=list(label=expression(Delta~"T (°C)"), cex=0.8))+
 as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
 
 
 
 figS_dP<- levelplot(dPavg, at= c(seq(-250, 250, 25)), par.settings = RdBuTheme, margin = F, maxpixels=1e7, 
 scales = list(draw = FALSE), 
-colorkey=list(title = "", height=0.8, width=0.9, space="top"), main=list(label="dP (mm)", cex=0.8)) + 
+colorkey=list(title = "", height=0.8, width=0.9, space="top"), main=list(label=expression(Delta~"P (mm)"), cex=0.8)) + 
 as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
 
 
