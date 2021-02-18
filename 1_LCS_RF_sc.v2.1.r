@@ -334,8 +334,8 @@ FIG2.1<-ggplot(data=fract_r, aes(x=reorder(LC,value), y=value/10000, fill=variab
   geom_text(aes(label=round(value_N/10000,0)), position = position_stack(vjust = 0.5), size=2.8) +
   theme( legend.position = c(.85, .20),
         legend.title = element_blank(), 
-       panel.background = element_rect(fill = "white", colour = "grey50"))+
-annotate("text", x = 1, y = 5000, label = "N Tg") + scale_fill_brewer(palette='Dark2')+
+       panel.background = element_rect(fill = "white", colour = "grey30"))+
+annotate("text", x = 0.7, y = 500, label = "[N Tg]", , size=2.8) + scale_fill_brewer(palette='Dark2')+
 geom_linerange(aes(ymin=(value_bar-value_sd)/10000, ymax=(value_bar+value_sd)/10000), alpha=0.6, size=0.5, position="identity")+
 coord_flip() 
 
@@ -343,9 +343,10 @@ FIG2.2<-ggplot(data=fract_r, aes(x=reorder(LC,mean), y=mean, fill=variable, widt
    geom_bar(stat="identity") +
   ylab(expression("SOC Mg ha"^-1)) + xlab("") +
 geom_text(aes(label=round(CN,0)), position = position_stack(vjust = 0.5), size=2.8) +
-  theme(legend.position = "none", 
-  panel.background = element_rect(fill = "white", colour = "grey50"))+
-annotate("text", x = 1, y = 90, label = "C:N ratio") + scale_fill_brewer(palette='Dark2')+
+   theme( legend.position = c(.85, .20),
+        legend.title = element_blank(), 
+  panel.background = element_rect(fill = "white", colour = "grey30"))+
+annotate("text", x = 0.7, y = 12, label = "[C:N ratio]", size=2.8) + scale_fill_brewer(palette='Dark2')+
 geom_linerange(aes(ymin=(value_barr-value_baer), ymax=(value_barr+value_baer)), alpha=0.6, size=0.5, position="identity")+
 coord_flip() 
 
@@ -424,4 +425,9 @@ colorkey=list(title = "", height=0.8, width=0.9, space="top"), main=list(label=s
 as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
 
 grid.arrange(FIGsdPOM , FIGsdMAOM, ncol=2)
+
+
+
+
+
 
