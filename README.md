@@ -5,6 +5,7 @@ R script '1_LCS_RF_sc.v2.r'
 
 `RF<-randomForest(OC_sc_g_kg ~ s_c_prc + pH_in_H2O + OC_tf + Ndep_WD_tx + MAT + EROS + WT, data = LCS, ntree=1000, mtry=4, importance=TRUE, na.action=na.omit)`
 
+---
 
 R script '1_LCS_RF_sc.v2.1.r'
 * **RF model prediction on 1km spatial layers**
@@ -18,6 +19,7 @@ R script '1_LCS_RF_sc.v2.1.r'
   
 ```
 
+---
 
 R script '1_LCS_RF_sc.v2.2___.r'
 * **sensitivity to MAT and P**
