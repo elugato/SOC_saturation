@@ -193,14 +193,14 @@ grid.arrange(FIG3.1, FIG3.2, FIG3.3, ncol=3)
 #########################################
 #FIG EXTENDED 1
 #########################################
-dTavg<- dT-(dT_CNRM + dT_HADes+ dT_IPLS)/3
-dPavg<- dP-(dP_CNRM + dP_HADes+ dP_IPLS)/3
+dTavg<- (dT_CNRM + dT_HADes+ dT_IPLS)/3
+dPavg<- (dP_CNRM + dP_HADes+ dP_IPLS)/3
 
 q<-quantile(dTavg, probs = c(0, 0.1, 0.25, 0.5, 0.75, 0.9, 1), type=7, names = T)
 
 figS_dT<- levelplot(dTavg, at= q, par.settings = viridisTheme, margin = F, maxpixels=1e7, 
 scales = list(draw = FALSE), 
-colorkey=list(title = "", height=0.8, width=0.9, space="top"), main=list(label=expression(Delta~"T (°C)"), cex=0.8))+
+colorkey=list(title = "", height=0.8, width=0.9, space="top"), main=list(label=expression(Delta~"T (Â°C)"), cex=0.8))+
 as.layer(t0, under = TRUE) + layer(sp.lines(mapaSHP, lwd=0.2, col='darkgray'))
 
 
