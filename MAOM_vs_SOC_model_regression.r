@@ -21,7 +21,7 @@ LCS<-subset(LCS, LU %in% c( "GR", "FR", "CR"))
 fig<- ggplot(LCS, aes(OC_tf, OC_sc_g_kg )) +  geom_point(size = 1, alpha = 0.8, color="darkgreen") +
   theme_bw() + 
   facet_wrap(~LU) +
-  geom_smooth(method = lm, formula = y ~ splines::bs(x, 2), se = TRUE) +
+ geom_smooth(method = lm,  formula = y ~ -1 + poly(x, 2, raw=T) , se = TRUE) +
   geom_smooth(method = "lm", formula = y ~ x+0, color="green") +
   geom_abline(intercept = 0, slope = 1, color="red", 
               linetype="dashed", size=1.0) + 
